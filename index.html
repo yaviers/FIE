@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explorador y Calculadora de Combinatoria</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8; /* Color crema de fondo */
+        }
+        .art-bg {
+            background-image: url('https://www.transparenttextures.com/patterns/concrete-wall-2.png');
+            background-color: #F5F1EC; /* Un fondo con textura sutil */
+        }
+        canvas {
+            touch-action: none; /* Previene acciones del navegador como scroll durante el gesto táctil en el canvas */
+        }
+        /* Estilo para el campo de entrada deshabilitado */
+        input:disabled {
+            background-color: #e9ecef;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-[#4A3F35]">Combinatoria Artística y General</h1>
+            <p class="text-lg text-gray-600 mt-2">Explora problemas del arte y calcula cualquier tipo de combinatoria.</p>
+        </header>
+
+        <!-- Explorador de Actividades Artísticas -->
+        <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-6 md:p-8 art-bg mb-10">
+            <h2 class="text-3xl font-bold text-[#4A3F35] mb-4 text-center">Explorador de Problemas Artísticos</h2>
+            <div class="mb-6">
+                <label for="activity-select" class="block text-lg font-medium text-[#4A3F35] mb-2">Selecciona una actividad artística:</label>
+                <select id="activity-select" class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A0522D] focus:border-[#A0522D] transition text-lg">
+                    <option value="" disabled selected>-- Elige un problema --</option>
+                </select>
+            </div>
+            
+            <div id="result-area" class="hidden">
+                <div class="flex flex-col md:flex-row gap-6 mb-6">
+                    <!-- Contenedor de la Visualización Artística -->
+                    <div class="md:w-1/3 flex-shrink-0">
+                        <h3 class="text-xl font-bold text-[#4A3F35] mb-2">Boceto del Problema</h3>
+                        <div id="problem-visual" class="flex items-center justify-center bg-gray-100 rounded-lg p-4 h-48 md:h-full border border-gray-200 shadow-inner">
+                            <!-- El boceto se insertará aquí -->
+                        </div>
+                    </div>
+                    <!-- Descripción y Análisis -->
+                    <div class="md:w-2/3">
+                        <div class="mb-6 bg-[#F9EAE1] border-l-4 border-[#D28F5D] p-4 rounded-r-lg">
+                            <h3 class="text-xl font-bold text-[#8C5A32]">Descripción del Problema</h3>
+                            <p id="problem-description" class="mt-1 text-[#6B4F3A]"></p>
+                        </div>
+                         <div class="bg-[#E1F0F9] border-l-4 border-[#5D9AD2] p-4 rounded-r-lg">
+                            <h3 class="text-xl font-bold text-[#326B8C]">Análisis Matemático</h3>
+                            <p id="problem-analysis" class="mt-1 text-[#3A5C6B]"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-[#E6EBE0] border border-[#A8B3A0] rounded-lg p-4 mb-6">
+                    <p class="text-lg"><strong>Fórmula:</strong> <span id="formula" class="font-mono"></span></p>
+                    <p class="text-lg"><strong>Cálculo:</strong> <span id="calculation" class="font-mono"></span></p>
+                    <p class="text-3xl font-bold mt-2">Total: <span id="total" class="text-[#6A7A5D]"></span></p>
+                </div>
+                <div class="mt-6">
+                     <h3 class="text-xl font-bold text-[#4A3F35] mb-2">Lista de Resultados Posibles</h3>
+                     <div id="result-list" class="bg-gray-50 p-4 rounded-lg max-h-60 overflow-y-auto text-center font-mono text-lg tracking-wider"></div>
+                </div>
+                <div class="mt-6">
+                    <h3 class="text-xl font-bold text-[#4A3F35] mb-2">Diagrama de Árbol</h3>
+                    <p class="text-sm text-gray-500 mb-2">PC: Usa el ratón para mover/zoom. Móvil: Usa 1 dedo para mover, 2 para zoom.</p>
+                    <div class="w-full h-[500px] bg-white rounded-lg border border-gray-200 overflow-hidden cursor-grab active:cursor-grabbing">
+                        <canvas id="treeCanvas"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div id="welcome-message" class="text-center py-10">
+                <svg class="mx-auto h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.898 20.572L16.5 21.75l-.398-1.178a3.375 3.375 0 00-2.9-2.9L12 17.25l1.178-.398a3.375 3.375 0 002.9-2.9L16.5 13.5l.398 1.178a3.375 3.375 0 002.9 2.9L21 17.25l-1.178.398a3.375 3.375 0 00-2.9 2.9z" /></svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">Elige un problema del menú para empezar.</h3>
+            </div>
+        </div>
+
+        <!-- Calculadora de Combinatoria -->
+        <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-6 md:p-8 art-bg">
+            <h2 class="text-3xl font-bold text-[#4A3F35] mb-6 text-center">Calculadora de Combinatoria</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div>
+                    <label for="calc-type" class="block text-lg font-medium text-[#4A3F35] mb-2">Tipo de Cálculo</label>
+                    <select id="calc-type" class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A0522D] focus:border-[#A0522D] transition text-lg">
+                        <option value="permutation">Permutación (n!)</option>
+                        <option value="variation_without_repetition">Variación sin Rep. (V(n,r))</option>
+                        <option value="variation_with_repetition">Variación con Rep. (VR(n,r))</option>
+                        <option value="combination_without_repetition">Combinación sin Rep. (C(n,r))</option>
+                        <option value="combination_with_repetition">Combinación con Rep. (CR(n,r))</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="calc-n" class="block text-lg font-medium text-[#4A3F35] mb-2">Total de elementos (n)</label>
+                    <input type="number" id="calc-n" min="1" value="4" class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A0522D] focus:border-[#A0522D] transition text-lg">
+                </div>
+                <div>
+                    <label for="calc-r" class="block text-lg font-medium text-[#4A3F35] mb-2">Elementos a elegir (r)</label>
+                    <input type="number" id="calc-r" min="1" value="2" class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A0522D] focus:border-[#A0522D] transition text-lg">
+                </div>
+            </div>
+
+            <div id="calculator-error" class="hidden text-center text-red-600 font-medium mb-4 p-3 bg-red-100 rounded-lg"></div>
+
+            <div class="text-center mb-6">
+                <button id="calculate-btn" class="bg-[#A0522D] text-white font-bold py-3 px-8 rounded-lg hover:bg-[#8C5A32] transition-colors text-lg">Calcular</button>
+            </div>
+
+            <div id="calculator-result-area" class="hidden">
+                 <h3 class="text-2xl font-bold text-[#4A3F35] mb-4">Resultados del Cálculo</h3>
+                 <div class="bg-[#E6EBE0] border border-[#A8B3A0] rounded-lg p-4 mb-6">
+                    <p class="text-lg"><strong>Fórmula:</strong> <span id="calc-formula" class="font-mono"></span></p>
+                    <p class="text-lg"><strong>Cálculo:</strong> <span id="calc-calculation" class="font-mono"></span></p>
+                    <p class="text-3xl font-bold mt-2">Total: <span id="calc-total" class="text-[#6A7A5D]"></span></p>
+                </div>
+                <div class="mt-6">
+                     <h3 class="text-xl font-bold text-[#4A3F35] mb-2">Listado de Agrupaciones</h3>
+                     <div id="calc-result-list" class="bg-gray-50 p-4 rounded-lg max-h-60 overflow-y-auto text-center font-mono text-lg tracking-wider"></div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="text-center mt-8 text-gray-500">
+            <p>Una fusión de arte y matemáticas.</p>
+        </footer>
+    </div>
+
+    <script>
+        // --- Bocetos y Visuales para las actividades ---
+        const visuals = {
+            palette: (colors) => `<div class="flex flex-wrap justify-center items-center gap-2">${colors.map(c => `<div class="w-10 h-10 rounded-full shadow-inner border-2 border-white/50" style="background-color: ${c}"></div>`).join('')}</div>`,
+            imageLayout: `<div class="grid grid-cols-3 grid-rows-2 gap-1.5 w-32 h-24 p-1.5 bg-gray-200 rounded-lg">${Array(5).fill(0).map((_,i) => `<div class="bg-gray-400 rounded flex items-center justify-center text-white text-xs font-mono">I${i+1}</div>`).join('')}</div>`,
+            cameraFilters: `<div class="relative w-24 h-24 grid place-items-center">${['#ff000066', '#00ff0066', '#0000ff66'].map((c, i) => `<div class="w-16 h-16 absolute rounded-lg border-2 border-white/80" style="background-color: ${c}; transform: rotate(${i * 20 - 20}deg);"></div>`).join('')}</div>`,
+            muralSketch: `<svg width="120" height="120" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="#F0EAD6" class="rounded-lg"/><path d="M10 80 Q 30 20, 50 50 T 90 20" stroke="#A0522D" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M5 50 Q 20 65, 40 60 T 80 85" stroke="#D2691E" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="75" cy="75" r="10" fill="#8B4513" opacity="0.7"/><rect x="15" y="20" width="20" height="20" fill="#8B4513" opacity="0.7" transform="rotate(15, 25, 30)"/></svg>`,
+            textilePattern: `<div class="w-32 h-32 rounded-lg" style="background-color: #F5DEB3; background-image: repeating-linear-gradient(45deg, #A0522D 0, #A0522D 2px, transparent 2px, transparent 10px), repeating-linear-gradient(-45deg, #A0522D 0, #A0522D 2px, transparent 2px, transparent 10px);"></div>`,
+            digitalPattern: `<div class="grid grid-cols-4 gap-1 w-28 h-28">${Array(16).fill(0).map(() => `<div class="w-6 h-6 rounded" style="background-color: hsl(${Math.random() * 360}, 60%, 70%)"></div>`).join('')}</div>`,
+            layerStack: `<div class="relative w-24 h-24 grid place-items-center">${['#ff8c0099', '#9932cc99', '#8fbc8f99'].map((c, i) => `<div class="w-20 h-20 absolute flex items-center justify-center text-white font-bold rounded-lg border-2 border-white/80" style="background-color: ${c}; transform: translateY(${i * 15 - 15}px) rotate(${i * 10 - 10}deg);">T${i+1}</div>`).join('')}</div>`,
+            mosaicScheme: `<div class="grid grid-cols-5 gap-0.5 w-32 h-32 p-1 bg-gray-400 rounded-lg">${Array(25).fill(0).map(() => `<div class="rounded-sm" style="background-color: ${['#4682B4', '#CD5C5C', '#F4A460', '#9ACD32'][Math.floor(Math.random() * 4)]}"></div>`).join('')}</div>`,
+            ceramicSketch: `<svg width="100" height="120" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg"><path d="M30 110 C 0 90, 0 40, 30 10 H 70 C 100 40, 100 90, 70 110 Z" stroke="#8B4513" stroke-width="4" fill="#F5DEB3" /><path d="M30 50 Q 50 60, 70 50" stroke="#A0522D" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M30 80 Q 50 70, 70 80" stroke="#A0522D" stroke-width="3" fill="none" stroke-linecap="round"/></svg>`,
+        };
+        
+        // --- Base de Datos de Actividades ---
+        const activities = {
+            'sr1': { description: "Un artista tiene 4 tubos de pintura (rojo, azul, amarillo, verde). ¿De cuántas formas distintas puede ordenarlos en su paleta?", analysis: "Se usan todos los elementos (4 tubos para 4 espacios) y el orden es crucial. Es una Permutación (P(n) = n!).", type: 'permutation', elements: ['R', 'A', 'Am', 'V'], r: 4, visual: visuals.palette(['#e53e3e', '#3b82f6', '#fbbf24', '#22c55e']) },
+            'sr2': { description: "Un diseñador gráfico organiza 5 imágenes diferentes para un cartel. ¿Cuántos ordenamientos posibles puede hacer?", analysis: "Se reordenan todos los elementos disponibles (5 imágenes) y el orden importa. Es una Permutación (P(n) = n!).", type: 'permutation', elements: ['I1', 'I2', 'I3', 'I4', 'I5'], r: 5, visual: visuals.imageLayout },
+            'sr3': { description: "Un pintor tiene 8 pigmentos distintos y quiere preparar una muestra de 3 colores, eligiendo el orden de aplicación.", analysis: "Se elige un subconjunto (3 de 8), el orden importa y no se repiten. Es una Variación sin Repetición (V(n,r) = n!/(n-r)!).", type: 'variation_without_repetition', elements: ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8'], r: 3, visual: visuals.palette(['#c53030', '#2c5282', '#975a16', '#2f855a', '#b7791f', '#6b46c1', '#b83280', '#5a67d8']) },
+            'sr4': { description: "Un fotógrafo tiene 10 filtros de colores diferentes y elige 3 para colocarlos en un orden específico en el lente.", analysis: "Se elige un subconjunto (3 de 10), el orden importa y no hay repetición. Es una Variación sin Repetición (V(n,r) = n!/(n-r)!).", type: 'variation_without_repetition', elements: Array.from({length: 10}, (_, i) => `F${i+1}`), r: 3, visual: visuals.cameraFilters },
+            'sr5': { description: "Un muralista tiene 10 botes de pintura distintos y necesita seleccionar 4 para su obra (sin importar el orden).", analysis: "Se elige un subconjunto (4 de 10) y el orden de selección no importa. Es una Combinación sin Repetición (C(n,r) = n!/(r!(n-r)!)).", type: 'combination_without_repetition', elements: Array.from({length: 10}, (_, i) => `B${i+1}`), r: 4, visual: visuals.muralSketch },
+            'sr6': { description: "Una diseñadora textil tiene 7 patrones diferentes y quiere seleccionar 3 para un diseño único.", analysis: "Se elige un subconjunto (3 de 7) y el orden de los patrones no altera el diseño final. Es una Combinación sin Repetición (C(n,r) = n!/(r!(n-r)!)).", type: 'combination_without_repetition', elements: Array.from({length: 7}, (_, i) => `P${i+1}`), r: 3, visual: visuals.textilePattern },
+            'cr1': { description: "Un ilustrador crea un patrón usando las 4 letras de 'ARTE'. Si las letras pueden repetirse, ¿cuántos patrones de 4 letras puede formar?", analysis: "Se forman grupos de 4, el orden importa (ATAR es distinto a RATA) y los elementos se pueden repetir. Es una Variación con Repetición (VR(n,r) = n^r).", type: 'variation_with_repetition', elements: ['A', 'R', 'T', 'E'], r: 4, visual: visuals.digitalPattern },
+            'cr2': { description: "Un programa de arte digital permite crear un código de colores de 5 dígitos (usando tonos del 0 al 9). ¿Cuántos códigos se pueden formar?", analysis: "Se forman códigos de 5 dígitos, el orden importa y los números (tonos) se pueden repetir. Es una Variación con Repetición (VR(n,r) = n^r).", type: 'variation_with_repetition', elements: ['0','1','2','3','4','5','6','7','8','9'], r: 5, visual: visuals.digitalPattern },
+            'cr3': { description: "En un programa de diseño se aplican 4 capas de efectos, eligiendo entre 6 texturas distintas en cada capa (se puede repetir textura).", analysis: "Se elige una textura para cada una de las 4 capas, el orden de las capas importa y las texturas se pueden repetir. Es una Variación con Repetición (VR(n,r) = n^r).", type: 'variation_with_repetition', elements: Array.from({length: 6}, (_, i) => `T${i+1}`), r: 4, visual: visuals.layerStack },
+            'cr4': { description: "Un artista digital crea ilustraciones seleccionando 3 colores de una paleta de 12, pudiendo repetir color en cada selección.", analysis: "Se hacen 3 selecciones de color, el orden importa (R-G-B es distinto a G-R-B) y se pueden repetir. Es una Variación con Repetición (VR(n,r) = n^r).", type: 'variation_with_repetition', elements: Array.from({length: 12}, (_, i) => `C${i+1}`), r: 3, visual: visuals.palette(['#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef', '#ec4899', '#78716c']) },
+            'cr5': { description: "Un fabricante de vidrieras con 5 colores de vidrio selecciona 3 piezas para un mosaico, pudiendo repetir colores.", analysis: "Se elige un grupo de 3 piezas, el orden no importa y los colores se pueden repetir. Es una Combinación con Repetición (CR(n,r)=(n+r-1)!/(r!(n-1)!)).", type: 'combination_with_repetition', elements: ['C1','C2','C3','C4','C5'], r: 3, visual: visuals.mosaicScheme },
+            'cr6': { description: "Una artista de cerámica con 4 esmaltes elige 6 capas para una pieza, pudiendo usar varias veces el mismo color.", analysis: "Se elige un grupo de 6 capas, el orden no importa (es la mezcla final) y los esmaltes se pueden repetir. Es una Combinación con Repetición (CR(n,r)=(n+r-1)!/(r!(n-1)!)).", type: 'combination_with_repetition', elements: ['E1','E2','E3','E4'], r: 6, visual: visuals.ceramicSketch }
+        };
+
+        // --- Elementos del DOM ---
+        const activitySelect = document.getElementById('activity-select');
+        const resultArea = document.getElementById('result-area');
+        const welcomeMessage = document.getElementById('welcome-message');
+        const problemVisualEl = document.getElementById('problem-visual');
+        const problemDescriptionEl = document.getElementById('problem-description');
+        const problemAnalysisEl = document.getElementById('problem-analysis');
+        const formulaEl = document.getElementById('formula');
+        const calculationEl = document.getElementById('calculation');
+        const totalEl = document.getElementById('total');
+        const resultListEl = document.getElementById('result-list');
+        const calculateBtn = document.getElementById('calculate-btn');
+        const calcResultArea = document.getElementById('calculator-result-area');
+        const calcTypeSelect = document.getElementById('calc-type');
+        const calcRInput = document.getElementById('calc-r');
+        const calcErrorEl = document.getElementById('calculator-error');
+        
+        // --- Poblar el Dropdown ---
+        function populateSelect() {
+            let activityCounter = 1;
+            Object.keys(activities).forEach(id => {
+                const option = document.createElement('option');
+                option.value = id;
+                option.textContent = `Actividad ${activityCounter++}`;
+                activitySelect.appendChild(option);
+            });
+        }
+        populateSelect();
+
+        // --- Event Listeners ---
+        activitySelect.addEventListener('change', (e) => {
+            const activityId = e.target.value;
+            if (activityId) {
+                displayExplorerResult(activityId);
+            }
+        });
+
+        calculateBtn.addEventListener('click', displayCalculatorResult);
+
+        calcTypeSelect.addEventListener('change', (e) => {
+            calcRInput.disabled = e.target.value === 'permutation';
+        });
+        
+        if (calcTypeSelect.value === 'permutation') {
+            calcRInput.disabled = true;
+        }
+
+
+        // --- Funciones Matemáticas ---
+        const factorial = (n) => {
+            if (n < 0) return NaN;
+            if (n === 0 || n === 1) return 1;
+            let result = BigInt(1);
+            for (let i = BigInt(2); i <= n; i++) {
+                result *= i;
+            }
+            return result;
+        };
+        
+        // --- Lógica de Cálculo y Generación de Listas ---
+        function performCalculation(type, n, r, elements) {
+            let result, formula, calculation, resultsList;
+
+            switch (type) {
+                case 'permutation':
+                    formula = "P(n) = n!";
+                    calculation = `P(${n}) = ${n}!`;
+                    result = factorial(n);
+                    resultsList = generatePermutations(elements, n);
+                    break;
+                case 'variation_without_repetition':
+                    formula = "V(n, r) = n! / (n - r)!";
+                    calculation = `V(${n}, ${r}) = ${n}! / (${n} - ${r})!`;
+                    result = factorial(n) / factorial(n - r);
+                    resultsList = generatePermutations(elements, r);
+                    break;
+                case 'variation_with_repetition':
+                    formula = "VR(n, r) = n^r";
+                    calculation = `VR(${n}, ${r}) = ${n}^${r}`;
+                    result = BigInt(n) ** BigInt(r);
+                    resultsList = generatePermutations(elements, r, true);
+                    break;
+                case 'combination_without_repetition':
+                    formula = "C(n, r) = n! / (r! * (n - r)!)";
+                    calculation = `C(${n}, ${r}) = ${n}! / (${r}!*(${n}-${r})!)`;
+                    result = factorial(n) / (factorial(r) * factorial(n - r));
+                    resultsList = generateCombinations(elements, r);
+                    break;
+                case 'combination_with_repetition':
+                    formula = "CR(n, r) = (n+r-1)! / (r!*(n-1)!)";
+                    calculation = `CR(${n},${r}) = (${n}+${r}-1)!/(${r}!*(${n}-1)!)`;
+                    result = factorial(n + r - 1) / (factorial(r) * factorial(n - 1));
+                    resultsList = generateCombinations(elements, r, true);
+                    break;
+                default:
+                    throw new Error("Tipo de cálculo no válido");
+            }
+            return { result, formula, calculation, resultsList };
+        }
+        
+        // --- Funciones de Display ---
+        function displayExplorerResult(activityId) {
+            try {
+                welcomeMessage.classList.add('hidden');
+                resultArea.classList.remove('hidden');
+
+                const activity = activities[activityId];
+                if (!activity) throw new Error("Actividad no encontrada.");
+                
+                const { elements, r, type, description, analysis, visual } = activity;
+                const n = elements.length;
+                
+                const { result, formula, calculation, resultsList } = performCalculation(type, n, r, elements);
+                
+                problemVisualEl.innerHTML = visual;
+                problemDescriptionEl.textContent = description;
+                problemAnalysisEl.textContent = analysis;
+                formulaEl.textContent = formula;
+                calculationEl.textContent = calculation;
+                totalEl.textContent = result.toString();
+                resultListEl.innerHTML = resultsList.map(item => `<span class="inline-block bg-white shadow-sm rounded px-3 py-1 m-1">${Array.isArray(item) ? item.join('') : item}</span>`).join('');
+
+                drawTree(resultsList);
+
+            } catch (error) {
+                console.error(error);
+                resultArea.classList.add('hidden');
+            }
+        }
+        
+        function displayCalculatorResult() {
+             try {
+                calcErrorEl.classList.add('hidden');
+                calcResultArea.classList.add('hidden');
+
+                const type = document.getElementById('calc-type').value;
+                const n = parseInt(document.getElementById('calc-n').value, 10);
+                let r = parseInt(document.getElementById('calc-r').value, 10);
+
+                if (isNaN(n) || n <= 0) {
+                    showCalculatorError("Por favor, introduce un valor numérico válido y positivo para 'n'.");
+                    return;
+                }
+                if (type === 'permutation') {
+                    r = n;
+                } else {
+                    if (isNaN(r) || r <= 0) {
+                        showCalculatorError("Por favor, introduce un valor numérico válido y positivo para 'r'.");
+                        return;
+                    }
+                }
+
+                if ((type === 'variation_without_repetition' || type === 'combination_without_repetition') && r > n) {
+                    showCalculatorError("Para cálculos sin repetición, 'r' no puede ser mayor que 'n'.");
+                    return;
+                }
+                
+                const elements = Array.from({length: n}, (_, i) => `E${i+1}`);
+
+                const { result, formula, calculation, resultsList } = performCalculation(type, n, r, elements);
+                
+                document.getElementById('calc-formula').textContent = formula;
+                document.getElementById('calc-calculation').textContent = calculation;
+                document.getElementById('calc-total').textContent = result.toString();
+                
+                const resultListContainer = document.getElementById('calc-result-list');
+                if (resultsList.length > 500) {
+                     resultListContainer.innerHTML = `<p class="text-red-500">Demasiados resultados (${resultsList.length}) para mostrar en la lista.</p>`;
+                } else {
+                    resultListContainer.innerHTML = resultsList.map(item => `<span class="inline-block bg-white shadow-sm rounded px-3 py-1 m-1">${Array.isArray(item) ? item.join(' ') : item}</span>`).join('');
+                }
+
+                calcResultArea.classList.remove('hidden');
+
+             } catch (error) {
+                 console.error(error);
+                 showCalculatorError("Hubo un error al realizar el cálculo. Revisa los valores.");
+             }
+        }
+        
+        function showCalculatorError(message) {
+            calcErrorEl.textContent = message;
+            calcErrorEl.classList.remove('hidden');
+        }
+
+
+        // --- Generadores de Listas ---
+        function generatePermutations(arr, k, withRepetition = false) {
+            const result = [];
+            const maxResults = 501; // Límite para evitar colapsos
+            function backtrack(current, remaining) {
+                if (result.length >= maxResults) return;
+                if (current.length === k) {
+                    result.push([...current]);
+                    return;
+                }
+                const options = withRepetition ? arr : remaining;
+                for (let i = 0; i < options.length; i++) {
+                    const next = options[i];
+                    current.push(next);
+                     if (withRepetition) {
+                        backtrack(current, arr);
+                    } else {
+                        const newRemaining = remaining.slice(0, i).concat(remaining.slice(i + 1));
+                        backtrack(current, newRemaining);
+                    }
+                    current.pop();
+                    if (result.length >= maxResults) return;
+                }
+            }
+            backtrack([], arr);
+            return result;
+        }
+
+        function generateCombinations(arr, k, withRepetition = false) {
+            const result = [];
+            const maxResults = 501; // Límite
+            function backtrack(current, start) {
+                if (result.length >= maxResults) return;
+                if (current.length === k) {
+                    result.push([...current]);
+                    return;
+                }
+                for (let i = start; i < arr.length; i++) {
+                    current.push(arr[i]);
+                    backtrack(current, withRepetition ? i : i + 1);
+                    current.pop();
+                    if (result.length >= maxResults) return;
+                }
+            }
+            backtrack([], 0);
+            return result;
+        }
+
+
+        // --- Lógica del Canvas para el Diagrama de Árbol (con soporte móvil) ---
+        const canvas = document.getElementById('treeCanvas');
+        const ctx = canvas.getContext('2d');
+        let panOffset = { x: 0, y: 0 };
+        let scale = 1.0;
+        let isPanning = false;
+        let panStart = { x: 0, y: 0 };
+        let initialPinchDistance = 0;
+        
+        function redrawCanvas() {
+            if (activitySelect.value) {
+                displayExplorerResult(activitySelect.value);
+            }
+        }
+
+        function drawTree(paths) {
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            ctx.translate(panOffset.x, panOffset.y);
+            ctx.scale(scale, scale);
+            
+            const maxPathsToDraw = 150; 
+            if (!paths || paths.length === 0 || paths.length > maxPathsToDraw) {
+                ctx.font = '16px Inter';
+                ctx.textAlign = 'center';
+                const message = !paths || paths.length === 0 
+                    ? 'No hay diagrama para mostrar.' 
+                    : `Demasiados resultados (${paths.length}) para dibujar.`;
+                ctx.fillStyle = paths.length > maxPathsToDraw ? '#D9534F' : '#6b7280';
+                ctx.fillText(message, rect.width / 2 / scale, rect.height / 2 / scale);
+                if (paths.length > maxPathsToDraw) {
+                   ctx.fillText('La lista completa se muestra arriba.', rect.width / 2 / scale, rect.height / 2 / scale + 20);
+                }
+                ctx.restore();
+                return;
+            }
+
+            const levelHeight = 80;
+            const startY = 50;
+            const root = { x: rect.width / 2, y: startY };
+            ctx.font = '14px Inter';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            function drawNode(x, y, text, isLeaf = false) {
+                 const nodeRadius = 18;
+                 ctx.beginPath();
+                 ctx.arc(x, y, nodeRadius, 0, 2 * Math.PI);
+                 ctx.fillStyle = isLeaf ? '#A0522D' : '#fff';
+                 ctx.strokeStyle = '#A0522D';
+                 ctx.lineWidth = 2;
+                 ctx.fill();
+                 ctx.stroke();
+                 ctx.fillStyle = isLeaf ? '#fff' : '#A0522D';
+                 ctx.fillText(text, x, y);
+            }
+
+            drawNode(root.x, root.y, '🎨');
+            
+            const leafCount = paths.length;
+            const nodeSpacing = Math.max(45, (rect.width - 100) / leafCount);
+            const totalWidth = leafCount * nodeSpacing;
+            const startX = (rect.width / 2) - (totalWidth / 2) + nodeSpacing / 2;
+
+            paths.forEach((path, pathIndex) => {
+                let lastNode = root;
+                path.forEach((element, level) => {
+                    const y = startY + (level + 1) * levelHeight;
+                    const x = startX + pathIndex * nodeSpacing;
+                    ctx.beginPath();
+                    ctx.moveTo(lastNode.x, lastNode.y + 18);
+                    ctx.lineTo(x, y - 18);
+                    ctx.strokeStyle = '#BE9B82';
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+                    drawNode(x, y, element, (level === path.length - 1));
+                    lastNode = { x, y };
+                });
+            });
+            ctx.restore();
+        }
+        
+        // --- Eventos de Mouse ---
+        canvas.addEventListener('mousedown', (e) => { isPanning = true; panStart.x = e.clientX - panOffset.x; panStart.y = e.clientY - panOffset.y; canvas.style.cursor = 'grabbing'; });
+        canvas.addEventListener('mouseup', () => { isPanning = false; canvas.style.cursor = 'grab'; });
+        canvas.addEventListener('mouseleave', () => { isPanning = false; canvas.style.cursor = 'grab'; });
+        canvas.addEventListener('mousemove', (e) => {
+            if (isPanning) {
+                panOffset.x = e.clientX - panStart.x;
+                panOffset.y = e.clientY - panStart.y;
+                redrawCanvas();
+            }
+        });
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const scaleAmount = 1.1;
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            const worldX = (mouseX - panOffset.x) / scale;
+            const worldY = (mouseY - panOffset.y) / scale;
+            if (e.deltaY < 0) { scale *= scaleAmount; } else { scale /= scaleAmount; }
+            scale = Math.max(0.1, Math.min(scale, 5));
+            panOffset.x = mouseX - worldX * scale;
+            panOffset.y = mouseY - worldY * scale;
+            redrawCanvas();
+        });
+        
+        // --- Eventos Táctiles (Móvil) ---
+        function getPinchDistance(touches) {
+            const dx = touches[0].clientX - touches[1].clientX;
+            const dy = touches[0].clientY - touches[1].clientY;
+            return Math.hypot(dx, dy);
+        }
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (e.touches.length === 1) { // Pan
+                isPanning = true;
+                panStart.x = e.touches[0].clientX - panOffset.x;
+                panStart.y = e.touches[0].clientY - panOffset.y;
+            } else if (e.touches.length === 2) { // Zoom
+                isPanning = false;
+                initialPinchDistance = getPinchDistance(e.touches);
+            }
+        }, { passive: false });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (isPanning && e.touches.length === 1) { // Pan
+                panOffset.x = e.touches[0].clientX - panStart.x;
+                panOffset.y = e.touches[0].clientY - panStart.y;
+                redrawCanvas();
+            } else if (e.touches.length === 2) { // Zoom
+                const newPinchDistance = getPinchDistance(e.touches);
+                if (initialPinchDistance > 0) {
+                    const scaleMultiplier = newPinchDistance / initialPinchDistance;
+                    
+                    const rect = canvas.getBoundingClientRect();
+                    const touchCenterX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
+                    const touchCenterY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
+
+                    const worldX = (touchCenterX - panOffset.x) / scale;
+                    const worldY = (touchCenterY - panOffset.y) / scale;
+                    
+                    scale *= scaleMultiplier;
+                    scale = Math.max(0.1, Math.min(scale, 5));
+
+                    panOffset.x = touchCenterX - worldX * scale;
+                    panOffset.y = touchCenterY - worldY * scale;
+
+                    redrawCanvas();
+                }
+                initialPinchDistance = newPinchDistance;
+            }
+        }, { passive: false });
+        
+        canvas.addEventListener('touchend', (e) => {
+            isPanning = false;
+            initialPinchDistance = 0;
+        });
+
+    </script>
+</body>
+</html>
